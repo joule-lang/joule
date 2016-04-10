@@ -1,0 +1,30 @@
+class Point {
+  int x; int y; // private fields, zero-initialized
+  Point(int x, int y) { // constructor, runs after allocation
+    this.x += x; this.y += y; // 'this.x' is a field, 'x' a parameter
+  }
+  procedure add_to_x(int x) { this.x += x; }
+  procedure add_to_y(int y) { this.y += y; }
+}
+class Main {
+	procedure example1() {
+  		local &Point p = &Point.new(5,8); // construct
+  		p.add_to_x(2); // p.x==7
+  		p!add_to_y(3); // p.y==5
+  		delocal &Point!new(7,5) p; // unconstruct
+	}
+	procedure example2() {
+		local &Point p = &Point.new(1,7);
+  		local &Point q = null;
+  		q := p;         // essentially q += p;
+  		q.add_to_x(2);  // p.x==3
+  		delocal q == p; // removes local variable
+  		delocal &Point!new(3,7) p; // unconstructs object
+	}
+}
+main point[10] {
+	local &Main m = &Main.new();
+	m.example1();
+	m.example2();
+	delocal &Main!new() m;
+}

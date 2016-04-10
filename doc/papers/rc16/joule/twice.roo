@@ -1,0 +1,27 @@
+abstract class Operator { // Defines an abstract interface
+  abstract procedure apply(int var, int value);
+}
+class Add extends Operator {
+  procedure apply(int var, int value) { var += value; }
+}
+class Sub extends Operator {
+  procedure apply(int var, int value) { var -= value; }
+}
+class Twice extends Operator {
+  &Operator op;
+  Twice(&Operator op) { this.op := op; } // := only on null references
+  procedure apply(int var, int value) {
+    local &Operator op = this.op; // copy of reference, fewer indirections
+    op.apply(var,value); op.apply(var,value); // Polymorphic call site
+    delocal op == this.op;
+  }
+}
+main twice[10] {
+  local &Operator a = &Add.new(); local &Operator b = &Sub.new();
+  local &Operator aa = &Twice.new(a); local &Operator bb = &Twice.new(b);
+  local int x = 0;
+  aa.apply(x,4); bb!apply(x,1); 
+  delocal x == 10;
+  delocal &Twice!new(b) bb; delocal &Twice!new(a) aa;
+  delocal &Sub!new() b; delocal &Add!new() a;	
+}

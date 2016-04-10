@@ -1,0 +1,165 @@
+grammar dk.sdu.mmmi.roo.ROO with org.eclipse.xtext.common.Terminals
+
+generate rOO "http://www.sdu.dk/mmmi/roo/ROO"
+
+Program:
+	classes+=ClassDecl* 'main' name=ID '[' depth=INT (',' width=INT)? ']' main=Body;
+	
+ClassDecl:
+	(abstract?='abstract')? 'class' name=ID ('extends' zuper=[ClassDecl])? '{' 
+	attributes+=Attribute* (constructor=Constructor)? procedures+=Procedure* '}'
+;
+
+Attribute:
+	type=Type name=ID ';'
+;
+
+Type:
+	BaseType | RefType
+;
+
+BaseType:
+	{BaseType} 'int' (array?='[' (dim=ArrayDim)? ']')?
+;
+
+ArrayDim:
+	constant=INT | symbolic=ID
+;
+
+RefType:
+	(abstract?='abstract')? '&' type=[ClassDecl]
+;
+
+Constructor:
+	declname=[ClassDecl] parameters=ParameterList body=Body
+;
+
+ParameterList:
+	{ParameterList} '(' (parameters+=Parameter (',' parameters+=Parameter)*)? ')'
+;
+
+Parameter:
+	type=Type id=ID
+;
+
+Procedure:
+	AbstractProcedure | ConcreteProcedure
+;
+
+AbstractProcedure:
+	'abstract' 'procedure' id=ID parameters=ParameterList ';'
+;
+
+ConcreteProcedure:
+	'procedure' id=ID parameters=ParameterList body=Body
+;
+
+Body:
+	{Body} '{' locals+=Local* statements+=Statement* delocals+=Delocal* '}'
+;
+
+Local:
+	'local' type=Type id=ID ('=' init=Exp)? ';'
+;
+
+Delocal:
+	DelocalObject | DelocalNonObject | DelocalAbstract
+;
+
+DelocalObject:
+	'delocal' '&' classdecl=[ClassDecl] '!' 'new' '(' (arguments+=Exp (',' arguments+=Exp)*)? ')' id=ID ';'
+;
+
+DelocalNonObject:
+	'delocal' id=ID '==' spec=DelocalSpec ';'
+;
+
+DelocalAbstract:
+	'delocal' 'abstract' id=ID ';'
+;
+
+DelocalSpec:
+	DelocalValue | DelocalArray
+;
+
+DelocalValue:
+	value=Exp
+;
+
+DelocalArray:
+	'int' '[' dim=Exp ']'
+;
+
+Statement:
+	Conditional | FromUntilLoop | ErrorStmt | Action | Print
+;
+
+Conditional:
+	'if' '(' pre=Exp ')' thenbody=Body 'else' elsebody=Body 'fi' '(' post=Exp ')' ';'
+;
+
+FromUntilLoop:
+	'from' '(' from=Exp ')' 'loop' body=Body 'until' '(' until=Exp ')' ';'
+;
+
+ErrorStmt:
+	'error' '(' msg=STRING ')' ';'
+;
+
+Print:
+	'println' '(' msg=STRING (',' value=ID)? ')' ';'
+;
+
+Action:
+	lhs=Location rest=CallOrOp ';'
+;
+
+CallOrOp:
+	Invocation | Operation
+;
+
+Operation:
+	op=OperationOP rhs=LocOrConstOrObj
+;
+
+LocOrConstOrObj:
+	Location | Constant | NewObject | NewArray
+;
+
+Location:
+	id=ID (dot=DotOrNotDot field=ID)? ('[' index=Exp ']')?
+;
+
+DotOrNotDot:
+	{Dot} '.' | {NotDot} '!'
+;
+
+OperationOP:
+	{OP_Swap} t='<=>' | {OP_Inc} t='+=' | {OP_Dec} t='-=' | {OP_Ass} t=':='
+;
+
+ExpOp:
+	{OP_LT} t='<' | {OP_LTE} t='<=' | {OP_GT} t='>' | {OP_GTE} t='>=' | {OP_EQ} t='==' | {OP_ADD} t='+' | {OP_SUB} t='-'
+;
+
+Exp:
+	prim=LocOrConstOrObj (op=ExpOp more=Exp)?
+;
+
+Constant:
+	value=INT
+;
+
+Invocation:
+	{Invocation} '(' (arguments+=Exp (',' arguments+=Exp)*)? ')'
+;
+
+NewObject:
+	'&' classdecl=[ClassDecl] '.' 'new' 
+	('[' (dimensions+=INT (',' dimensions+=INT)*)? ']')? 
+	'(' (arguments+=Exp (',' arguments+=Exp)*)? ')'
+;
+
+NewArray:
+	'new' 'int' '[' dim=Exp ']'
+;

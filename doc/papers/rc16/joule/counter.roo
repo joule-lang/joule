@@ -1,0 +1,19 @@
+class Counter {
+  int limit; // stop incrementing this.count when limit is reached
+  int value; // updated when calling 'count' 
+  Counter(int limit) { this.limit += limit; }
+  procedure count(int flag) {
+    if(this.value<this.limit) { this.value += 1; } 
+    else { flag += 1; } 
+    fi(flag==0);
+  }
+  procedure finalize(int uncount) { this.value -= uncount; }
+}
+main counter[10] {
+  local &Counter c = &Counter.new(3); // construct
+  local int flag = 0;
+  c.count(flag); c.count(flag);
+  c.finalize(2); // reset c.value to 0
+  delocal flag == 0;
+  delocal &Counter!new(3) c; // unconstruct
+}
